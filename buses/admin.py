@@ -22,8 +22,13 @@ class BookingsAdmin(admin.ModelAdmin):
     search_fields = ['user', 'schedule']
     list_filter = ['total_price', 'booking_date', 'seats_booked']
     
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['booking', 'amount', 'status']
+    list_filter = ['status']
+    
 admin.site.register(Bus, BusAdmin)
 admin.site.register(Route, RouteAdmin)
 admin.site.register(BusImage)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Booking, BookingsAdmin)
+admin.site.register(Payment, PaymentAdmin)

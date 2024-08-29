@@ -6,4 +6,6 @@ urlpatterns = [
     path('create-schedule/', create_schedule, name='schedule'),
     path('buses/', buses, name='buses'),
     path('bus-detail/<id>', bus_detail_view, name='bus_detail'),
+    path('book/', book, name='book'),
+    path('pay/', pay, name='pay'),
 ]
