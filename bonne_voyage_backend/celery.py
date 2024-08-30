@@ -4,7 +4,7 @@ from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bonne_voyage_backend.settings')
 
-app = Celery('your_project_name')
+app = Celery('bonne_voyage_backend')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 

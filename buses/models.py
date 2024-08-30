@@ -67,7 +67,7 @@ class Booking(models.Model):
     status = models.CharField(max_length=20, choices=choices)
     
     def __str__(self):
-        return f"Booking {self.id} by {self.user.first_name} for {self.Schedule.route}"
+        return f"Booking {self.id} by {self.user.first_name} for {self.schedule.route}"
     
     def clean(self):
         booked_seats = Booking.objects.filter(

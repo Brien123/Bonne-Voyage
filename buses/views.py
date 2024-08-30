@@ -268,11 +268,11 @@ def pay(request):
     number=data['number']
     
     collect = campay.initCollect({
-         "amount": str(amount), #The amount you want to collect
+         "amount": str(amount),
          "currency": "XAF",
-         "from": str(number), #Phone number to request amount from. Must include country code
+         "from": str(number),
          "description": "some description",
-         "external_reference": "", #Reference from the system initiating the transaction.
+         "external_reference": "",
       })
     response = {
         'data': collect
