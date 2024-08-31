@@ -183,6 +183,102 @@ def bus_detail_view(request, id):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
  
+# @api_view(['POST'])
+# def book(request):
+#     user = request.user
+#     data = request.data
+    
+#     try:
+#         bus_id = data['bus']['id']
+#         schedule = Schedule.objects.get(bus=bus_id)
+#     except Schedule.DoesNotExist:
+#         return Response({
+#             'status': 'error',
+#             'message': 'Schedule does not exist for the given bus.'
+#         }, status=status.HTTP_404_NOT_FOUND)
+#     except KeyError:
+#         return Response({
+#             'status': 'error',
+#             'message': 'Bus ID is required.'
+#         }, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'An unexpected error occurred: {str(e)}'
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     try:
+#         seats_booked = data['seats_booked']
+#         phone_number = data['phone_number']
+#     except KeyError as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'Missing field: {str(e)}'
+#         }, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'An unexpected error occurred: {str(e)}'
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     try:
+#         booking = Booking.objects.create(
+#             user=user,
+#             schedule=schedule,
+#             seats_booked=seats_booked,
+#             total_price=schedule.price * seats_booked,
+#             status='PENDING',
+#         )
+#     except Exception as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'Error creating booking: {str(e)}'
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     try:
+#         payment = Payment.objects.create(
+#             booking=booking,
+#             amount=booking.total_price,
+#             currency='XAF',
+#         )
+#     except Exception as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'Error creating payment: {str(e)}'
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     try:
+#         initiate_payment_task.delay(payment.id, booking.id, booking.total_price, booking.schedule.currency, phone_number)
+#     except Exception as e:
+#         return Response({
+#             'status': 'error',
+#             'message': f'Error initiating payment task: {str(e)}'
+#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     return Response({
+#         'status': 'success',
+#         'message': 'Payment process has been initiated.',
+#         'payment_id': payment.id
+#     }, status=status.HTTP_200_OK)
+    
+@api_view(['POST'])
+def pay(request):
+    data=request.data
+    amount=data['amount']
+    number=data['number']
+    
+    collect = campay.initCollect({
+         "amount": str(amount),
+         "currency": "XAF",
+         "from": str(number),
+         "description": "some description",
+         "external_reference": "",
+      })
+    response = {
+        'data': collect
+    }
+    return Response(response)
+
 @api_view(['POST'])
 def book(request):
     user = request.user
@@ -222,29 +318,25 @@ def book(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
-        booking = Booking.objects.create(
-            user=user,
-            schedule=schedule,
-            seats_booked=seats_booked,
-            total_price=schedule.price * seats_booked,
-            status='PENDING',
-        )
-    except Exception as e:
-        return Response({
-            'status': 'error',
-            'message': f'Error creating booking: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with transaction.atomic():
+            booking = Booking.objects.create(
+                user=user,
+                schedule=schedule,
+                seats_booked=seats_booked,
+                total_price=schedule.price * seats_booked,
+                status='PENDING',
+            )
 
-    try:
-        payment = Payment.objects.create(
-            booking=booking,
-            amount=booking.total_price,
-            currency='XAF',
-        )
+            payment = Payment.objects.create(
+                user=user,
+                booking=booking,
+                amount=booking.total_price,
+                currency='XAF',
+            )
     except Exception as e:
         return Response({
             'status': 'error',
-            'message': f'Error creating payment: {str(e)}'
+            'message': f'Error creating booking or payment: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
@@ -261,20 +353,3 @@ def book(request):
         'payment_id': payment.id
     }, status=status.HTTP_200_OK)
     
-@api_view(['POST'])
-def pay(request):
-    data=request.data
-    amount=data['amount']
-    number=data['number']
-    
-    collect = campay.initCollect({
-         "amount": str(amount),
-         "currency": "XAF",
-         "from": str(number),
-         "description": "some description",
-         "external_reference": "",
-      })
-    response = {
-        'data': collect
-    }
-    return Response(response)

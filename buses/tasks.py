@@ -4,6 +4,7 @@ from django.conf import settings
 from .models import Payment
 from django.utils import timezone
 from dotenv import load_dotenv
+from notifications.tasks import *
 import time
 import os
 
@@ -74,6 +75,10 @@ def initiate_payment_task(payment_id, booking_id, amount, currency, phone_number
                     payment.status = payment_status
                     payment.save()
                     print(f"Final payment status: {payment.status}")
+                                    
+                    if payment_status == 'SUCCESSFUL':
+                        booking_notification.delay(booking_id, payment.booking.user.id)
+                        
                     break
 
                 time.sleep(check_interval)
@@ -98,7 +103,7 @@ def initiate_payment_task(payment_id, booking_id, amount, currency, phone_number
                 "email": payment.user.email or '',
                 "redirect_url": "https://mysite.com/success/",
                 "failure_redirect_url": "https://mysite.com/failure/",
-                "payment_options": "MOMO,CARD",
+                "payment_options": "MOMO",
             })
             payment.payment_link = link_response.get('link')
             payment.status = 'PENDING'

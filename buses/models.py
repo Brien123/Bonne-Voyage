@@ -87,15 +87,15 @@ class Booking(models.Model):
 class Payment(models.Model):
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
-        ('SUCCESS', 'Success'),
+        ('SUCCESSFUL', 'Successful'),
         ('FAILED', 'Failed'),
         ('CANCELLED', 'Cancelled'),
     ]
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
     payment_reference = models.CharField(max_length=255, blank=True, null=True)
     payment_link = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
