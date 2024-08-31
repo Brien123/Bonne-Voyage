@@ -8,4 +8,6 @@ urlpatterns = [
     path('bus-detail/<id>', bus_detail_view, name='bus_detail'),
     path('book/', book, name='book'),
     path('pay/', pay, name='pay'),
+    path('balance/', operator_balance, name='balance'),
+    path('withdraw/', withdraw, name='withdraw'),
 ]

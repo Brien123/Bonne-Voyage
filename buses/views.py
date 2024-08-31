@@ -8,10 +8,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
-from .tasks import initiate_payment_task
+from .tasks import initiate_payment_task, disburse
 from django.shortcuts import get_object_or_404
 from campay.sdk import Client as CamPayClient
 from dotenv import load_dotenv
+from django.db.models import Sum
 import time
 import os
 
@@ -353,3 +354,57 @@ def book(request):
         'payment_id': payment.id
     }, status=status.HTTP_200_OK)
     
+@api_view(['GET'])
+def operator_balance(request):
+    user = request.user
+    try:
+        operator = BusOperator.objects.get(user=user)
+    except BusOperator.DoesNotExist:
+        return Response({"error": "Operator not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        with transaction.atomic():
+            operator_buses = Bus.objects.filter(operator=operator)
+            operator_schedules = Schedule.objects.filter(bus__in=operator_buses)
+            operator_bookings = Booking.objects.filter(schedule__in=operator_schedules)
+            balance = operator_bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0
+            withdrawals = Withdrawals.objects.filter(operator=operator)
+            withdrawal_sum = withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0
+            balance = int(balance) - int(withdrawal_sum) 
+
+        return Response({
+            'status': 'success',
+            'balance': balance
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': f'Error getting balance: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+api_view(['POST'])
+def withdraw(request):
+    user = request.user
+    data = request.data
+    amount = data.get('amount')
+    phone_number = data.get('phone_number')
+    
+    try:
+        operator = BusOperator.objects.get(user=user)
+        operator_id = operator.id
+    except BusOperator.DoesNotExist:
+        return Response({"error": "Operator not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        disburse.delay(amount, phone_number, operator_id)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': f'Error initiating disburse task: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    return Response({
+        'status': 'success',
+        'message': 'Withdrawal process has been initiated.',
+    }, status=status.HTTP_200_OK)

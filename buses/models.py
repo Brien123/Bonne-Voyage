@@ -103,3 +103,10 @@ class Payment(models.Model):
 
     def __str__(self):
         return f'Payment {self.id} - {self.status}'   
+    
+class Withdrawals(models.Model):
+    operator = models.ForeignKey(BusOperator, on_delete=models.CASCADE)
+    amount = models.CharField(max_length=10)
+    receiver = models.CharField(max_length=10)
+    description = models.CharField(max_length=2560)
+    reference = models.CharField(max_length=10)

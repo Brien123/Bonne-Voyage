@@ -1,7 +1,7 @@
 from celery import shared_task
 from campay.sdk import Client as CamPayClient
 from django.conf import settings
-from .models import Payment
+from .models import Payment, Withdrawals
 from django.utils import timezone
 from dotenv import load_dotenv
 from notifications.tasks import *
@@ -130,3 +130,27 @@ def initiate_payment_task(payment_id, booking_id, amount, currency, phone_number
             payment.status = 'FAILED'
             payment.description = f'InitCollect failed: {str(e)}, Payment link failed: {str(fallback_e)}'
             payment.save()
+ 
+@shared_task           
+def disburse(amount, phone_number, operator_id, reference=None):
+    operator = BusOperator.objects.get(id=operator_id)
+    try:
+        response = campay.disburse({
+            "amount": str(amount),
+            "to": str(phone_number),
+            "currency": "XAF",
+            "description": "withdrawal",
+            "external_reference": ""
+        })
+        if response.get('status') == "SUCCESSFUL":
+            withdrawal = Withdrawals.objects.create(
+                operator=operator,
+                amount=amount,
+                receiver=phone_number,
+                description="withdrawal",
+                reference=None
+            )
+            withdrawal.save()
+            print(f"{amount} successful sent out")
+    except Exception as e:
+        return f"error: {e}"
