@@ -15,16 +15,44 @@ from dotenv import load_dotenv
 from django.db.models import Sum
 import time
 import os
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 # Create your views here.
 User = get_user_model()
 
 campay = CamPayClient({
-        "app_username" : os.getenv('CAMPAY_USERNAME'),
-        "app_password" : os.getenv('CAMPAY_PASSWORD'),
-        "environment" : "DEV"
-    })
+    "app_username": os.getenv('CAMPAY_USERNAME'),
+    "app_password": os.getenv('CAMPAY_PASSWORD'),
+    "environment": "DEV"
+})
 
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'name': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the bus'),
+            'bus_number': openapi.Schema(type=openapi.TYPE_STRING, description='Bus registration number'),
+            'capacity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Capacity of the bus'),
+            'amenities': openapi.Schema(type=openapi.TYPE_STRING, description='Amenities provided in the bus'),
+            'origin': openapi.Schema(type=openapi.TYPE_STRING, description='Route origin'),
+            'destination': openapi.Schema(type=openapi.TYPE_STRING, description='Route destination'),
+            'distance': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Distance of the route'),
+            'departure_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Departure time of the schedule'),
+            'arrival_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Arrival time of the schedule'),
+            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Price of the schedule'),
+            'images': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_FILE), description='Images of the bus'),
+        }
+    ),
+    responses={
+        201: openapi.Response('Created', BusSerializer),
+        400: "Bad Request",
+        403: "Forbidden",
+        500: "Internal Server Error"
+    },
+    operation_description="Create a new bus. Only accessible to users with the 'OPERATOR' role."
+)
 @api_view(['POST'])
 def create_bus(request):
     try:
@@ -77,6 +105,28 @@ def create_bus(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['bus_id', 'route_id', 'departure_time', 'arrival_time', 'price'],
+        properties={
+            'bus_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus'),
+            'route_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the route'),
+            'departure_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Departure time of the schedule'),
+            'arrival_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Arrival time of the schedule'),
+            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Price of the schedule')
+        }
+    ),
+    responses={
+        201: openapi.Response('Created', ScheduleCreateSerializer),
+        400: "Bad Request",
+        403: "Forbidden",
+        500: "Internal Server Error"
+    },
+    operation_description="Create a new schedule for a bus. Only accessible to users with the 'OPERATOR' role."
+)
 @api_view(['POST'])
 def create_schedule(request):
     try:
@@ -113,29 +163,64 @@ def create_schedule(request):
     
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+ 
     
-# @api_view(["POST"])
-# def create(request):
-#     user = request.user
-#     if user.role != User.OPERATOR:
-#         return Response({"error": "User not authorized to create a schedule."}, status=status.HTTP_403_FORBIDDEN)
-        
-#     try:
-#         data = request.data
-#         operator = BusOperator.objects.get(user=user)
-        
-#         with transaction.atomic():
-#             Bus.objects.create(
-#                 operator=operator,
-#                 name=data['name'],
-#                 bus_number=data['bus_number'],
-#                 capacity=data['capacity'],
-#                 amenities=data['amenities']
-#             )
-#             images = request.FILES.getlist('images')
-#             if images:
-#                 for image in images:
-#                     BusImage.objects.create(bus=bus, image=image)
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus'),
+                        'operator': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the operator'),
+                        'name': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the bus'),
+                        'bus_number': openapi.Schema(type=openapi.TYPE_STRING, description='Bus number'),
+                        'capacity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Bus capacity'),
+                        'amenities': openapi.Schema(type=openapi.TYPE_STRING, description='Bus amenities'),
+                        'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Creation timestamp'),
+                        'images': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_STRING, description='URL of the bus image')
+                        ),
+                        'routes': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the route'),
+                                    'origin': openapi.Schema(type=openapi.TYPE_STRING, description='Route origin'),
+                                    'destination': openapi.Schema(type=openapi.TYPE_STRING, description='Route destination'),
+                                    'distance': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Distance of the route'),
+                                }
+                            )
+                        ),
+                        'schedules': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the schedule'),
+                                    'bus': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus'),
+                                    'route': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the route'),
+                                    'departure_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Departure time'),
+                                    'arrival_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Arrival time'),
+                                    'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Price of the schedule'),
+                                    'currency': openapi.Schema(type=openapi.TYPE_STRING, description='Currency of the price'),
+                                }
+                            )
+                        ),
+                    }
+                )
+            )
+        ),
+        500: 'Internal Server Error'
+    },
+    operation_description="Retrieve a list of all buses with their images, routes, and schedules."
+)
 @api_view(['GET'])
 def buses(request):
     try:
@@ -160,7 +245,64 @@ def buses(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+ 
     
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'bus': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus'),
+                            'operator': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the operator'),
+                            'name': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the bus'),
+                            'bus_number': openapi.Schema(type=openapi.TYPE_STRING, description='Bus number'),
+                            'capacity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Bus capacity'),
+                            'amenities': openapi.Schema(type=openapi.TYPE_STRING, description='Bus amenities'),
+                            'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Creation timestamp'),
+                        }
+                    ),
+                    'images': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_STRING, description='URL of the bus image')
+                    ),
+                    'route': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the route'),
+                            'origin': openapi.Schema(type=openapi.TYPE_STRING, description='Route origin'),
+                            'destination': openapi.Schema(type=openapi.TYPE_STRING, description='Route destination'),
+                            'distance': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Distance of the route'),
+                        }
+                    ),
+                    'schedule': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the schedule'),
+                                'bus': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus'),
+                                'route': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the route'),
+                                'departure_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Departure time'),
+                                'arrival_time': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Arrival time'),
+                                'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Price of the schedule'),
+                                'currency': openapi.Schema(type=openapi.TYPE_STRING, description='Currency of the price'),
+                            }
+                        )
+                    )
+                }
+            )
+        ),
+        404: openapi.Response('Bus not found'),
+        500: openapi.Response('Internal Server Error'),
+    },
+    operation_description="Retrieve detailed information about a specific bus, including images, route, and schedule."
+)
 @api_view(['GET'])
 def bus_detail_view(request, id):
     try:
@@ -168,7 +310,7 @@ def bus_detail_view(request, id):
             bus = Bus.objects.get(id=id)
 
             bus_images = BusImage.objects.filter(bus=bus)
-            bus_route = Route.objects.filter(bus=bus).first() 
+            bus_route = Route.objects.filter(bus=bus).first()
             bus_schedule = Schedule.objects.filter(bus=bus)
 
         bus_data = {
@@ -184,102 +326,127 @@ def bus_detail_view(request, id):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
  
-# @api_view(['POST'])
-# def book(request):
-#     user = request.user
-#     data = request.data
     
-#     try:
-#         bus_id = data['bus']['id']
-#         schedule = Schedule.objects.get(bus=bus_id)
-#     except Schedule.DoesNotExist:
-#         return Response({
-#             'status': 'error',
-#             'message': 'Schedule does not exist for the given bus.'
-#         }, status=status.HTTP_404_NOT_FOUND)
-#     except KeyError:
-#         return Response({
-#             'status': 'error',
-#             'message': 'Bus ID is required.'
-#         }, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'An unexpected error occurred: {str(e)}'
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#     try:
-#         seats_booked = data['seats_booked']
-#         phone_number = data['phone_number']
-#     except KeyError as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'Missing field: {str(e)}'
-#         }, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'An unexpected error occurred: {str(e)}'
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#     try:
-#         booking = Booking.objects.create(
-#             user=user,
-#             schedule=schedule,
-#             seats_booked=seats_booked,
-#             total_price=schedule.price * seats_booked,
-#             status='PENDING',
-#         )
-#     except Exception as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'Error creating booking: {str(e)}'
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#     try:
-#         payment = Payment.objects.create(
-#             booking=booking,
-#             amount=booking.total_price,
-#             currency='XAF',
-#         )
-#     except Exception as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'Error creating payment: {str(e)}'
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#     try:
-#         initiate_payment_task.delay(payment.id, booking.id, booking.total_price, booking.schedule.currency, phone_number)
-#     except Exception as e:
-#         return Response({
-#             'status': 'error',
-#             'message': f'Error initiating payment task: {str(e)}'
-#         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#     return Response({
-#         'status': 'success',
-#         'message': 'Payment process has been initiated.',
-#         'payment_id': payment.id
-#     }, status=status.HTTP_200_OK)
-    
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'amount': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description='Amount to be collected'),
+            'number': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number or identifier for the payer')
+        },
+        required=['amount', 'number']
+    ),
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'data': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'status': openapi.Schema(type=openapi.TYPE_STRING, description='Status of the collection initiation'),
+                            'transaction_id': openapi.Schema(type=openapi.TYPE_STRING, description='Transaction ID from Campay'),
+                            'amount': openapi.Schema(type=openapi.TYPE_STRING, description='Amount collected'),
+                            'currency': openapi.Schema(type=openapi.TYPE_STRING, description='Currency of the amount'),
+                            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Description of the transaction'),
+                            'external_reference': openapi.Schema(type=openapi.TYPE_STRING, description='External reference for the transaction'),
+                            # Add other fields from `collect` response if necessary
+                        }
+                    )
+                }
+            )
+        ),
+        400: openapi.Response('Bad Request'),
+        500: openapi.Response('Internal Server Error'),
+    },
+    operation_description="Initiate a payment collection with Campay. Provide the amount and payer's phone number."
+)
 @api_view(['POST'])
 def pay(request):
-    data=request.data
-    amount=data['amount']
-    number=data['number']
+    data = request.data
+    amount = data.get('amount')
+    number = data.get('number')
     
-    collect = campay.initCollect({
-         "amount": str(amount),
-         "currency": "XAF",
-         "from": str(number),
-         "description": "some description",
-         "external_reference": "",
-      })
-    response = {
-        'data': collect
-    }
-    return Response(response)
+    try:
+        collect = campay.initCollect({
+            "amount": str(amount),
+            "currency": "XAF",
+            "from": str(number),
+            "description": "some description",
+            "external_reference": "",
+        })
+        response = {
+            'data': collect
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'bus': openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the bus')
+                },
+                required=['id']
+            ),
+            'seats_booked': openapi.Schema(type=openapi.TYPE_INTEGER, description='Number of seats booked'),
+            'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number of the user')
+        },
+        required=['bus', 'seats_booked', 'phone_number']
+    ),
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Status of the request'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Message with details'),
+                    'payment_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the payment')
+                }
+            )
+        ),
+        400: openapi.Response(
+            'Bad Request',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Error status'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        ),
+        404: openapi.Response(
+            'Not Found',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Error status'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        ),
+        500: openapi.Response(
+            'Internal Server Error',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Error status'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        )
+    },
+    operation_description="Create a booking and initiate payment process. Requires bus ID, number of seats, and phone number."
+)
 @api_view(['POST'])
 def book(request):
     user = request.user
@@ -353,7 +520,43 @@ def book(request):
         'message': 'Payment process has been initiated.',
         'payment_id': payment.id
     }, status=status.HTTP_200_OK)
-    
+
+
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Status of the request'),
+                    'balance': openapi.Schema(type=openapi.TYPE_INTEGER, description='Current balance of the operator')
+                }
+            )
+        ),
+        404: openapi.Response(
+            'Not Found',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        ),
+        500: openapi.Response(
+            'Internal Server Error',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Error status'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        )
+    },
+    operation_description="Retrieve the current balance of the logged-in operator, including bookings and withdrawals."
+)
 @api_view(['GET'])
 def operator_balance(request):
     user = request.user
@@ -382,8 +585,52 @@ def operator_balance(request):
             'status': 'error',
             'message': f'Error getting balance: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+ 
         
-api_view(['POST'])
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['amount', 'phone_number'],
+        properties={
+            'amount': openapi.Schema(type=openapi.TYPE_INTEGER, description='Amount to withdraw'),
+            'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number for disbursement')
+        }
+    ),
+    responses={
+        200: openapi.Response(
+            'Success',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Status of the request'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message')
+                }
+            )
+        ),
+        404: openapi.Response(
+            'Not Found',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        ),
+        500: openapi.Response(
+            'Internal Server Error',
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'status': openapi.Schema(type=openapi.TYPE_STRING, description='Error status'),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message')
+                }
+            )
+        )
+    },
+    operation_description="Initiate a withdrawal process for the logged-in operator. This triggers a disbursement task."
+)
+@api_view(['POST'])
 def withdraw(request):
     user = request.user
     data = request.data
