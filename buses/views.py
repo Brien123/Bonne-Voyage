@@ -17,6 +17,7 @@ import time
 import os
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from users.serializers import *
 
 # Create your views here.
 User = get_user_model()
@@ -655,3 +656,25 @@ def withdraw(request):
         'status': 'success',
         'message': 'Withdrawal process has been initiated.',
     }, status=status.HTTP_200_OK)
+    
+  
+@api_view(['GET'])  
+def operator_details(request):
+    user = request.user
+    data = request.data
+    operator_id = data.get('id')
+    
+    try:
+        operator = BusOperator.objects.get(id=operator_id)
+        operator_images = BusOperatorImage.objects.filter(operator=operator)
+        
+        operator_data = {
+            'operator': BusOperatorSerializer(operator).data,
+            'images': BusOperatorImageSerializer(operator_images, many=True).data,
+        }
+        
+        return Response(operator_data, status=status.HTTP_200_OK)
+    
+    except BusOperator.DoesNotExist:
+        return Response({"error": "Operator not found."}, status=status.HTTP_404_NOT_FOUND)
+        

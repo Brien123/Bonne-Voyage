@@ -10,4 +10,5 @@ urlpatterns = [
     path('pay/', pay, name='pay'),
     path('balance/', operator_balance, name='balance'),
     path('withdraw/', withdraw, name='withdraw'),
+    path('operator-details/', operator_details, name='operator-details')
 ]

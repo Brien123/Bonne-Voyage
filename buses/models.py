@@ -12,7 +12,7 @@ class Bus(models.Model):
     # image = models.ImageField(upload_to='bus_images/', blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     
-    class meta:
+    class Meta:
         ordering = ['created_at']
         
     def __str__(self):

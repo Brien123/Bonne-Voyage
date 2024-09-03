@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import BusOperator
+from .models import *
 
 User = get_user_model()
 
@@ -75,3 +75,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
+class BusOperatorImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusOperatorImage
+        fields = ('operator', 'image', 'uploaded_at')
