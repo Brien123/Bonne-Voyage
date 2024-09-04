@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="my-4">Dashboard</h1>
+
+    <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <h5>Total Users</h5>
+                    <h2>{{ user_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <h5>Total Buses</h5>
+                    <h2>{{ bus_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <h5>Total Bookings</h5>
+                    <h2>{{ bookings_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Booking Status Distribution
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Popular Routes
+                </div>
+                <div class="card-body">
+                    <canvas id="routeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Booking Status Chart
+    const bookingStatusCtx = document.getElementById('bookingStatusChart').getContext('2d');
+    const bookingStatusData = {
+        labels: {{ booking_status_labels|safe }},
+        datasets: [{
+            label: 'Bookings',
+            data: {{ booking_status_counts|safe }},
+            backgroundColor: ['#007bff', '#28a745', '#ffc107'],
+            borderColor: ['#007bff', '#28a745', '#ffc107'],
+            borderWidth: 1
+        }]
+    };
+    new Chart(bookingStatusCtx, {
+        type: 'pie',
+        data: bookingStatusData,
+    });
+
+    // Route Popularity Chart
+    const routeCtx = document.getElementById('routeChart').getContext('2d');
+    const routeData = {
+        labels: {{ route_labels|safe }},
+        datasets: [{
+            label: 'Routes',
+            data: {{ route_counts|safe }},
+            backgroundColor: '#17a2b8',
+            borderColor: '#17a2b8',
+            borderWidth: 1
+        }]
+    };
+    new Chart(routeCtx, {
+        type: 'bar',
+        data: routeData,
+    });
+</script>
+{% endblock %}

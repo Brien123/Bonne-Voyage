@@ -27,6 +27,7 @@ def initiate_payment_task(payment_id, booking_id, amount, currency, phone_number
     # Retrieve payment record
     try:
         payment = Payment.objects.get(id=payment_id)
+        booking = Booking.objects.get(id=booking_id)
         print(f"Payment record found: {payment}")
     except Payment.DoesNotExist:
         print(f"Payment with ID {payment_id} does not exist.")
@@ -73,7 +74,9 @@ def initiate_payment_task(payment_id, booking_id, amount, currency, phone_number
 
                 if payment_status != 'PENDING':
                     payment.status = payment_status
+                    booking.status = 'CONFIRMED'
                     payment.save()
+                    booking.save()
                     print(f"Final payment status: {payment.status}")
                                     
                     if payment_status == 'SUCCESSFUL':
