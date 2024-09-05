@@ -15,6 +15,9 @@ Django==5.1
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 drf-yasg==1.21.7
+fake-factory==9999.9.9
+Faker==28.4.1
+gunicorn==23.0.0
 idna==3.8
 importlib_resources==6.4.4
 inflection==0.5.1
@@ -24,6 +27,7 @@ kombu==5.4.0
 packaging==24.1
 pillow==10.4.0
 prompt_toolkit==3.0.47
+psycopg2-binary==2.9.9
 PyJWT==2.9.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
@@ -33,9 +37,11 @@ redis==5.0.8
 referencing==0.35.1
 requests==2.32.3
 rpds-py==0.20.0
+setuptools==74.1.2
 six==1.16.0
 sqlparse==0.5.1
 swagger-spec-validator==3.0.4
+toposort==1.10
 typing_extensions==4.12.2
 tzdata==2024.1
 uritemplate==4.1.1
