@@ -5,6 +5,9 @@ from django.db.models.functions import TruncMonth
 from datetime import timedelta
 from users.models import User
 from buses.models import Bus, Booking, Route
+from notifications.models import *
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 def dashboard_view(request):
     # Booking status distribution
@@ -42,6 +45,13 @@ def dashboard_view(request):
 
     # Average booking value
     average_booking_value = Booking.objects.aggregate(Avg('total_price'))['total_price__avg']
+    
+    # Total revenue
+    # operator_buses = Bus.objects.all()
+    def total_revenue():
+        operator_schedules = Schedule.objects.all()
+        operator_bookings = Booking.objects.filter(schedule__in=operator_schedules)
+        balance = operator_bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0
 
     # Context for the template
     context = {
@@ -61,3 +71,23 @@ def dashboard_view(request):
     }
 
     return render(request, 'dashboard/dashboard.html', context)
+
+def admin_notification(request):
+    message = request.POST.get('message')
+    
+    if not message:
+        return JsonResponse({'error': 'Message content is required.'}, status=400)
+    
+    # Create notifications for all users
+    users = User.objects.all()
+    notifications = [
+        Notifications(recipient=user, notification_type='SYSTEM', message=message)
+        for user in users
+    ]
+    Notifications.objects.bulk_create(notifications)
+
+    return JsonResponse({'success': 'Notifications sent successfully.'}, status=201)
+
+@login_required
+def notification_view(request):
+    return render(request, 'dashboard/admin_notification.html')

@@ -12,12 +12,43 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Ensure the body and html take up full height */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        /* Flexbox layout for body to ensure footer sticks to the bottom */
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main content area to take up the remaining space */
+        main {
+            flex: 1;
+        }
+
+        /* Ensure the footer stays at the bottom */
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        /* Optional: Set a minimum height for the header */
+        nav.navbar {
+            min-height: 56px; /* Adjust based on your needs */
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">My Dashboard</a>
+            <a class="navbar-brand" href="#">Bonne Voyage</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -25,6 +56,9 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'create_notification' %}">Create Notification</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Profile</a>
@@ -41,14 +75,16 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid mt-4">
-        {% block content %}
-        <!-- Content goes here -->
-        {% endblock %}
-    </div>
+    <main>
+        <div class="container mt-4">
+            {% block content %}
+            <!-- Content goes here -->
+            {% endblock %}
+        </div>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
+    <footer>
         <div class="container">
             <p class="mb-0">© 2024 My Dashboard. All Rights Reserved.</p>
         </div>

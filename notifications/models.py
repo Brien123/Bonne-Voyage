@@ -9,7 +9,7 @@ class Notifications(models.Model):
         ('BOOKING', 'booking'), 
         ('REMINDER', 'reminder')
     )
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipient = models.ManyToManyField(User)
     notification_type = models.CharField(max_length=20, choices=NOTICATION_TYPES)
     message = models.CharField(max_length=2560)
     created_at = models.DateTimeField(auto_now_add=True)
