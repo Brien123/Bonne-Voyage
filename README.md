@@ -2,6 +2,9 @@
 
 **Bonne Voyage** is a comprehensive bus booking and payment system designed to streamline the process of reserving bus tickets, managing schedules, and processing payments with real-time updates. The application is built with Django and Django Channels, providing a robust backend for handling various aspects of bus operations, user management, and payment processing in Cameroon.
 
+## Model Relationships
+![Django Model Diagram](mymodels.png)
+
 ## Key Features
 
 - **User Management:** 
@@ -18,7 +21,7 @@
 
 - **Payment Integration:**
   - Robust payment handling using multiple payment gateways.
-  - WebSocket notifications to provide real-time payment status updates to users, ensuring transparency and immediacy.
+  - Celery task notifications to provide real-time payment status updates to users, ensuring transparency and immediacy.
   - Automatic price calculation and validation to ensure accuracy in transactions.
 
 - **WebSocket Notifications:**
@@ -29,14 +32,14 @@
 
 - **Backend:** Django, Django Channels
 - **Database:** PostgreSQL
-- **WebSockets:** Django Channels with Redis
+- **Tasks:** Celery tasks with Redis
 - **Payment Gateway:** Campay
 
 ## Installation and Setup
 
 1. **Clone the Repository:**
    ```
-   git clone https://github.com/yourusername/bonne-voyage.git
+   git clone https://github.com/Brien123/Bonne-Voyage.git
    cd bonne-voyage
    ```
 
