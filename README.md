@@ -21,7 +21,7 @@
 
 - **Payment Integration:**
   - Robust payment handling using multiple payment gateways.
-  - WebSocket notifications to provide real-time payment status updates to users, ensuring transparency and immediacy.
+  - Celery task notifications to provide real-time payment status updates to users, ensuring transparency and immediacy.
   - Automatic price calculation and validation to ensure accuracy in transactions.
 
 - **WebSocket Notifications:**
@@ -32,14 +32,14 @@
 
 - **Backend:** Django, Django Channels
 - **Database:** PostgreSQL
-- **WebSockets:** Django Channels with Redis
+- **Tasks:** Celery tasks with Redis
 - **Payment Gateway:** Campay
 
 ## Installation and Setup
 
 1. **Clone the Repository:**
    ```
-   git clone https://github.com/yourusername/bonne-voyage.git
+   git clone https://github.com/Brien123/Bonne-Voyage.git
    cd bonne-voyage
    ```
 
