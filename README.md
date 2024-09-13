@@ -24,13 +24,23 @@
   - Celery task notifications to provide real-time payment status updates to users, ensuring transparency and immediacy.
   - Automatic price calculation and validation to ensure accuracy in transactions.
 
-- **WebSocket Notifications:**
+- **Notifications:**
   - Real-time updates on booking and payment statuses.
   - Instant notifications sent to users upon successful booking and payment via WebSocket connections.
+ 
+- ## Custom Dashboards
+![Custom Dashboard](screenshots/ss1.png)
+![Custom Dashboard](screenshots/ss2.png)
+
+- ## Swagger Docs
+![swagger docs](screenshots/ss3.png)
+![swagger docs](screenshots/ss4.png)
+![swagger docs](screenshots/ss5.png)
+
 
 ## Tech Stack
 
-- **Backend:** Django, Django Channels
+- **Backend:** Django,
 - **Database:** PostgreSQL
 - **Tasks:** Celery tasks with Redis
 - **Payment Gateway:** Campay
