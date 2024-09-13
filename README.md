@@ -2,6 +2,9 @@
 
 **Bonne Voyage** is a comprehensive bus booking and payment system designed to streamline the process of reserving bus tickets, managing schedules, and processing payments with real-time updates. The application is built with Django and Django Channels, providing a robust backend for handling various aspects of bus operations, user management, and payment processing in Cameroon.
 
+## Model Relationships
+![Django Model Diagram](mymodels.png)
+
 ## Key Features
 
 - **User Management:** 
